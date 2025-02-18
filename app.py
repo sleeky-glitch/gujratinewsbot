@@ -1,9 +1,9 @@
 import streamlit as st
 from pinecone import Pinecone
 import openai
-import datetime
-from googletrans import Translator
+from deep_translator import GoogleTranslator
 import pandas as pd
+import datetime
 
 # Check for API keys in secrets
 if 'api_keys' not in st.secrets:
@@ -11,33 +11,34 @@ if 'api_keys' not in st.secrets:
     st.stop()
 
 # Initialize OpenAI
-openai_client = OpenAI(api_key=st.secrets["api_keys"]["openai"])
+openai.api_key = st.secrets["api_keys"]["openai"]
 
 # Initialize Pinecone
 pc = Pinecone(api_key=st.secrets["api_keys"]["pinecone"])
 index = pc.Index("news-articles-18-02")
 
-# Initialize translator
-translator = Translator()
-
 def get_embedding(text):
     """Get embedding for a text using OpenAI API"""
     try:
-        response = openai_client.embeddings.create(
+        response = openai.Embedding.create(
             input=text,
-            model="text-embedding-ada-002"
+            model="text-embedding-3-small"
         )
-        return response.data[0].embedding
+        return response['data'][0]['embedding']
     except Exception as e:
         st.error(f"Error getting embedding: {e}")
         return None
 
+def detect_language(text):
+    """Detect if text contains Gujarati characters"""
+    return any(ord(c) > 127 for c in text)
+
 def translate_to_english(text):
     """Translate text to English if it's in Gujarati"""
     try:
-        detected = translator.detect(text)
-        if detected.lang != 'en':
-            return translator.translate(text, dest='en').text
+        if detect_language(text):
+            translator = GoogleTranslator(source='gu', target='en')
+            return translator.translate(text)
         return text
     except Exception as e:
         st.error(f"Translation error: {e}")
@@ -46,7 +47,8 @@ def translate_to_english(text):
 def translate_to_gujarati(text):
     """Translate text to Gujarati"""
     try:
-        return translator.translate(text, dest='gu').text
+        translator = GoogleTranslator(source='en', target='gu')
+        return translator.translate(text)
     except Exception as e:
         st.error(f"Translation error: {e}")
         return text
@@ -129,7 +131,7 @@ def main():
 
                         with col2:
                             if st.button(f"Translate", key=f"trans_{idx}"):
-                                if any(ord(c) > 127 for c in row['Title']):
+                                if detect_language(row['Title']):
                                     translated = translate_to_english(row['Title'])
                                     st.write("🇺🇸 English:")
                                 else:
