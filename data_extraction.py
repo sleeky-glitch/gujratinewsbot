@@ -3,7 +3,7 @@ import json
 from pymongo import MongoClient
 
 # Load your mongodb connection string from an environment variable
-mongo_uri = os.environ.get("MONGO_URI")  # Set this in your environment securely
+mongo_uri = "mongodb+srv://aieworldsportso2o:a8T5wYHiQp0EuNpa@cluster0.n3a1w.mongodb.net/"
 client = MongoClient(mongo_uri)
 
 # Access the database and collections
