@@ -1,6 +1,6 @@
 import streamlit as st
 from pinecone import Pinecone
-from openai import OpenAI
+import openai
 import datetime
 from googletrans import Translator
 import pandas as pd
